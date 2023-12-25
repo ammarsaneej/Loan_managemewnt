@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Management App</title>
+    <style>
+        .due-today {
+            color: red;
+            font-weight: bold;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Loan Upcoming Due Dates</h1>
+    <p>Displays loans that are due within the next 30 days.</p>	
+    <table id="upcomingLoans">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Lender</th>
+                <th>Reference</th>
+                <th>Capital</th>
+                <th>Interest</th>
+                <th>Installment</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h1>NCRCS Loans</h1>
+    <p>Displays NCRCS loans that are due within the next 30 days.</p>
+    <table id="ncrcsLoans">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Lender</th>
+                <th>Reference</th>
+                <th>Capital</th>
+                <th>Interest</th>
+                <th>Installment</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h1>Expired Loans</h1>
+    <p>This expired loan details will be displayed only for 14 days and will be deleted after that.</p>
+    <table id="expiredLoans">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Lender</th>
+                <th>Reference</th>
+                <th>Capital</th>
+                <th>Interest</th>
+                <th>Installment</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div id="createdBy">Created by: M I Ammar Saneej</div>
+
+    <script>
+        const apiKey = 'AIzaSyDdIZz5120-LxJmhLsMHgfvgAil3G7-GI8';
+        const spreadsheetId = '1E73ERVtf9KhxbyaiguEkg96aKyc4sCZkFgq0cxmlEUM';
+
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1?key=${apiKey}`)
+            .then(response => response.json())
+            .then(data => {
+                const loansData = data.values;
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                let upcomingTableContent = '';
+                let expiredTableContent = '';
+                let ncrcsTableContent = '';
+
+                const lenders = loansData[0];
+
+                for (let i = 2; i < loansData.length; i++) {
+                    let row = loansData[i];
+                    let loanDate = new Date(row[0]);
+                    loanDate.setHours(0, 0, 0, 0);
+
+                    for (let j = 1; j < row.length; j += 4) {
+                        let lenderIndex = Math.ceil(j / 4) * 4 - 3;
+                        let lenderName = lenders[lenderIndex];
+
+                        if (row[j] || row[j+1] || row[j+2] || row[j+3]) {
+                            let timeDiff = (loanDate - today) / (1000 * 60 * 60 * 24);
+
+                            if (lenderName.includes("NCRCS") && timeDiff >= 0 && timeDiff <= 30) {
+                                let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
+                                ncrcsTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
+                            }
+
+                            if (timeDiff >= 0 && timeDiff <= 30) {
+                                let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
+                                upcomingTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
+                            } else if (timeDiff < 0 && timeDiff >= -14) {
+                                expiredTableContent += buildTableRow(row, lenderName, loanDate, j, `Expires in ${14 + Math.ceil(timeDiff)} days`);
+                            }
+                        }
+                    }
+                }
+
+                document.querySelector("#upcomingLoans tbody").innerHTML = upcomingTableContent || "<tr><td colspan='7'>No upcoming loans.</td></tr>";
+                document.querySelector("#ncrcsLoans tbody").innerHTML = ncrcsTableContent || "<tr><td colspan='7'>No NCRCS loans.</td></tr>";
+                document.querySelector("#expiredLoans tbody").innerHTML = expiredTableContent || "<tr><td colspan='7'>No expired loans.</td></tr>";
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+        function buildTableRow(row, lenderName, loanDate, j, remarks) {
+            return `
+                <tr>
+                    <td>${loanDate.toLocaleDateString()}</td>
+                    <td>${lenderName}</td>
+                    <td>${row[j] || ''}</td>
+                    <td>${row[j+1] || ''}</td>
+                    <td>${row[j+2] || ''}</td>
+                    <td>${row[j+3] || ''}</td>
+                    <td>${remarks}</td>
+                </tr>
+            `;
+        }
+    </script>
+</body>
+</html>
