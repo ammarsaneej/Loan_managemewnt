@@ -115,7 +115,7 @@
                                 let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
                                 upcomingTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
                             } else if (timeDiff < 0 && timeDiff >= -14) {
-                                expiredTableContent += buildTableRow(row, lenderName, loanDate, j, `Expires in ${14 + Math.ceil(timeDiff)} days`);
+                                expiredTableContent += buildTableRow(row, lenderName, loanDate, j, `Delete in ${14 + Math.ceil(timeDiff)} days`);
                             }
                         }
                     }
