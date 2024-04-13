@@ -25,7 +25,9 @@
 </head>
 <body>
     <h1>Loan Upcoming Due Dates</h1>
-    <p>Displays loans that are due within the next 30 days.</p>	
+    <p>Displays loans that are due within the next 30 days.</p>
+    <label for="loanFilter">Filter Lender:</label>
+    <input type="text" id="loanFilter" onkeyup="filterTable('upcomingLoans', 1)"><br><br>
     <table id="upcomingLoans">
         <thead>
             <tr>
@@ -43,6 +45,8 @@
 
     <h1>NCRCS Loans</h1>
     <p>Displays NCRCS loans that are due within the next 30 days.</p>
+    <label for="ncrcsFilter">Filter Lender:</label>
+    <input type="text" id="ncrcsFilter" onkeyup="filterTable('ncrcsLoans', 1)"><br><br>
     <table id="ncrcsLoans">
         <thead>
             <tr>
@@ -60,6 +64,8 @@
 
     <h1>Expired Loans</h1>
     <p>This expired loan details will be displayed only for 14 days and will be deleted after that.</p>
+    <label for="expiredFilter">Filter Lender:</label>
+    <input type="text" id="expiredFilter" onkeyup="filterTable('expiredLoans', 1)"><br><br>
     <table id="expiredLoans">
         <thead>
             <tr>
@@ -141,6 +147,25 @@
                     <td>${remarks}</td>
                 </tr>
             `;
+        }
+
+        function filterTable(tableId, columnIndex) {
+            const input = document.getElementById(tableId + 'Filter');
+            const filterValue = input.value.toUpperCase();
+            const table = document.getElementById(tableId);
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                if (cells.length > 0) {
+                    const cellValue = cells[columnIndex].textContent || cells[columnIndex].innerText;
+                    if (cellValue.toUpperCase().indexOf(filterValue) > -1) {
+                        rows[i].style.display = '';
+                    } else {
+                        rows[i].style.display = 'none';
+                    }
+                }
+            }
         }
     </script>
 </body>
