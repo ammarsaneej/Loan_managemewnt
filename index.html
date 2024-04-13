@@ -24,8 +24,12 @@
     </style>
 </head>
 <body>
-    <h1>Loan Upcoming Due Dates</h1>
-    <p>Displays loans that are due within the next 30 days.</p>	
+    <h1>All Index Loan Upcoming Due Dates</h1>
+    <label for="allLenders">Filter by Lender:</label>
+    <select id="allLenders" onchange="filterLoans(this.value, 'upcomingLoans')">
+        <option value="">All</option>
+        <!-- Add options for lenders dynamically if needed -->
+    </select>
     <table id="upcomingLoans">
         <thead>
             <tr>
@@ -42,7 +46,11 @@
     </table>
 
     <h1>NCRCS Loans</h1>
-    <p>Displays NCRCS loans that are due within the next 30 days.</p>
+    <label for="ncrcsLenders">Filter by Lender:</label>
+    <select id="ncrcsLenders" onchange="filterLoans(this.value, 'ncrcsLoans')">
+        <option value="">All</option>
+        <!-- Add options for lenders dynamically if needed -->
+    </select>
     <table id="ncrcsLoans">
         <thead>
             <tr>
@@ -59,7 +67,11 @@
     </table>
 
     <h1>Expired Loans</h1>
-    <p>This expired loan details will be displayed only for 14 days and will be deleted after that.</p>
+    <label for="expiredLenders">Filter by Lender:</label>
+    <select id="expiredLenders" onchange="filterLoans(this.value, 'expiredLoans')">
+        <option value="">All</option>
+        <!-- Add options for lenders dynamically if needed -->
+    </select>
     <table id="expiredLoans">
         <thead>
             <tr>
@@ -88,60 +100,80 @@
 
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                let upcomingTableContent = '';
-                let expiredTableContent = '';
-                let ncrcsTableContent = '';
 
                 const lenders = loansData[0];
+                const allLendersSelect = document.getElementById('allLenders');
+                const ncrcsLendersSelect = document.getElementById('ncrcsLenders');
+                const expiredLendersSelect = document.getElementById('expiredLenders');
 
-                for (let i = 2; i < loansData.length; i++) {
-                    let row = loansData[i];
-                    let loanDate = new Date(row[0]);
-                    loanDate.setHours(0, 0, 0, 0);
+                for (let i = 1; i < lenders.length; i++) {
+                    const option = document.createElement('option');
+                    option.text = lenders[i];
+                    option.value = lenders[i];
+                    allLendersSelect.add(option);
+                    ncrcsLendersSelect.add(option.cloneNode(true));
+                    expiredLendersSelect.add(option.cloneNode(true));
+                }
 
-                    for (let j = 1; j < row.length; j += 4) {
-                        let lenderIndex = Math.ceil(j / 4) * 4 - 3;
-                        let lenderName = lenders[lenderIndex];
+                const upcomingTable = document.getElementById('upcomingLoans');
+                const ncrcsTable = document.getElementById('ncrcsLoans');
+                const expiredTable = document.getElementById('expiredLoans');
 
-                        if (row[j] || row[j+1] || row[j+2] || row[j+3]) {
-                            let timeDiff = (loanDate - today) / (1000 * 60 * 60 * 24);
+                function filterLoans(selectedLender, tableId) {
+                    const table = tableId === 'upcomingLoans' ? upcomingTable : (tableId === 'ncrcsLoans' ? ncrcsTable : expiredTable);
+                    const tableBody = table.querySelector('tbody');
+                    let tableContent = '';
 
-                            if (lenderName.includes("NCRCS") && timeDiff >= 0 && timeDiff <= 30) {
-                                let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
-                                ncrcsTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
-                            }
+                    for (let i = 1; i < loansData.length; i++) {
+                        const row = loansData[i];
+                        const loanDate = new Date(row[0]);
+                        loanDate.setHours(0, 0, 0, 0);
+                        const lenderName = row[1];
 
+                        if ((lenderName === selectedLender || selectedLender === '') && tableId === 'upcomingLoans') {
+                            const timeDiff = (loanDate - today) / (1000 * 60 * 60 * 24);
                             if (timeDiff >= 0 && timeDiff <= 30) {
-                                let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
-                                upcomingTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
-                            } else if (timeDiff < 0 && timeDiff >= -14) {
-                                expiredTableContent += buildTableRow(row, lenderName, loanDate, j, `Delete in ${14 + Math.ceil(timeDiff)} days`);
+                                const remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
+                                tableContent += buildTableRow(row, lenderName, loanDate, 2, remarks);
+                            }
+                        } else if ((lenderName === selectedLender || selectedLender === '') && tableId === 'ncrcsLoans') {
+                            const timeDiff = (loanDate - today) / (1000 * 60 * 60 * 24);
+                            if (lenderName.includes("NCRCS") && timeDiff >= 0 && timeDiff <= 30) {
+                                const remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
+                                tableContent += buildTableRow(row, lenderName, loanDate, 2, remarks);
+                            }
+                        } else if ((lenderName === selectedLender || selectedLender === '') && tableId === 'expiredLoans') {
+                            const timeDiff = (loanDate - today) / (1000 * 60 * 60 * 24);
+                            if (timeDiff < 0 && timeDiff >= -14) {
+                                tableContent += buildTableRow(row, lenderName, loanDate, 2, `Delete in ${14 + Math.ceil(timeDiff)} days`);
                             }
                         }
                     }
+
+                    tableBody.innerHTML = tableContent || "<tr><td colspan='7'>No loans to display.</td></tr>";
                 }
 
-                document.querySelector("#upcomingLoans tbody").innerHTML = upcomingTableContent || "<tr><td colspan='7'>No upcoming loans.</td></tr>";
-                document.querySelector("#ncrcsLoans tbody").innerHTML = ncrcsTableContent || "<tr><td colspan='7'>No NCRCS loans.</td></tr>";
-                document.querySelector("#expiredLoans tbody").innerHTML = expiredTableContent || "<tr><td colspan='7'>No expired loans.</td></tr>";
+                function buildTableRow(row, lenderName, loanDate, columnIndex, remarks) {
+                    return `
+                        <tr>
+                            <td>${loanDate.toLocaleDateString()}</td>
+                            <td>${lenderName}</td>
+                            <td>${row[columnIndex] || ''}</td>
+                            <td>${row[columnIndex + 1] || ''}</td>
+                            <td>${row[columnIndex + 2] || ''}</td>
+                            <td>${row[columnIndex + 3] || ''}</td>
+                            <td>${remarks}</td>
+                        </tr>
+                    `;
+                }
+
+                filterLoans('', 'upcomingLoans');
+                filterLoans('', 'ncrcsLoans');
+                filterLoans('', 'expiredLoans');
             })
             .catch(error => {
                 console.error('Error:', error);
             });
-
-        function buildTableRow(row, lenderName, loanDate, j, remarks) {
-            return `
-                <tr>
-                    <td>${loanDate.toLocaleDateString()}</td>
-                    <td>${lenderName}</td>
-                    <td>${row[j] || ''}</td>
-                    <td>${row[j+1] || ''}</td>
-                    <td>${row[j+2] || ''}</td>
-                    <td>${row[j+3] || ''}</td>
-                    <td>${remarks}</td>
-                </tr>
-            `;
-        }
     </script>
 </body>
 </html>
