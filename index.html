@@ -26,9 +26,7 @@
 <body>
     <h1>Loan Upcoming Due Dates</h1>
     <p>Displays loans that are due within the next 30 days.</p>
-    <input type="text" id="upcomingFilter" placeholder="Filter by Lender">
-    <button onclick="filterTable('upcomingLoans', 'upcomingFilter')">Filter</button>
-    <button onclick="clearFilter('upcomingLoans', 'upcomingFilter')">Clear</button>
+    <input type="text" id="upcomingFilter" oninput="filterTable('upcomingLoans', 'upcomingFilter')">
     <table id="upcomingLoans">
         <thead>
             <tr>
@@ -46,9 +44,7 @@
 
     <h1>NCRCS Loans</h1>
     <p>Displays NCRCS loans that are due within the next 30 days.</p>
-    <input type="text" id="ncrcsFilter" placeholder="Filter by Lender">
-    <button onclick="filterTable('ncrcsLoans', 'ncrcsFilter')">Filter</button>
-    <button onclick="clearFilter('ncrcsLoans', 'ncrcsFilter')">Clear</button>
+    <input type="text" id="ncrcsFilter" oninput="filterTable('ncrcsLoans', 'ncrcsFilter')">
     <table id="ncrcsLoans">
         <thead>
             <tr>
@@ -66,9 +62,7 @@
 
     <h1>Expired Loans</h1>
     <p>This expired loan details will be displayed only for 14 days and will be deleted after that.</p>
-    <input type="text" id="expiredFilter" placeholder="Filter by Lender">
-    <button onclick="filterTable('expiredLoans', 'expiredFilter')">Filter</button>
-    <button onclick="clearFilter('expiredLoans', 'expiredFilter')">Clear</button>
+    <input type="text" id="expiredFilter" oninput="filterTable('expiredLoans', 'expiredFilter')">
     <table id="expiredLoans">
         <thead>
             <tr>
@@ -159,22 +153,14 @@
             const rows = table.getElementsByTagName('tr');
 
             for (let i = 0; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName('td');
-                let found = false;
-                for (let j = 0; j < cells.length; j++) {
-                    const cell = cells[j];
-                    if (cell) {
-                        const txtValue = cell.textContent || cell.innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            found = true;
-                            break;
-                        }
+                const td = rows[i].getElementsByTagName('td')[1];
+                if (td) {
+                    const txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        rows[i].style.display = '';
+                    } else {
+                        rows[i].style.display = 'none';
                     }
-                }
-                if (found) {
-                    rows[i].style.display = '';
-                } else {
-                    rows[i].style.display = 'none';
                 }
             }
         }
