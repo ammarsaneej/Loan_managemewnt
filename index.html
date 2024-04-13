@@ -40,6 +40,15 @@
             </tr>
         </thead>
         <tbody></tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Total</td>
+                <td id="totalCapital" class="finance"></td>
+                <td id="totalInterest" class="finance"></td>
+                <td id="totalInstallment" class="finance"></td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 
     <h1>NCRCS Loans</h1>
@@ -58,6 +67,15 @@
             </tr>
         </thead>
         <tbody></tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Total</td>
+                <td id="totalCapitalNCRCS" class="finance"></td>
+                <td id="totalInterestNCRCS" class="finance"></td>
+                <td id="totalInstallmentNCRCS" class="finance"></td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 
     <h1>Expired Loans</h1>
@@ -76,6 +94,15 @@
             </tr>
         </thead>
         <tbody></tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Total</td>
+                <td id="totalCapitalExpired" class="finance"></td>
+                <td id="totalInterestExpired" class="finance"></td>
+                <td id="totalInstallmentExpired" class="finance"></td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 
     <div id="createdBy">Created by: M I Ammar Saneej</div>
@@ -96,6 +123,15 @@
                 let ncrcsTableContent = '';
 
                 const lenders = loansData[0];
+                let totalCapital = 0;
+                let totalInterest = 0;
+                let totalInstallment = 0;
+                let totalCapitalNCRCS = 0;
+                let totalInterestNCRCS = 0;
+                let totalInstallmentNCRCS = 0;
+                let totalCapitalExpired = 0;
+                let totalInterestExpired = 0;
+                let totalInstallmentExpired = 0;
 
                 for (let i = 2; i < loansData.length; i++) {
                     let row = loansData[i];
@@ -112,13 +148,22 @@
                             if (lenderName.includes("NCRCS") && timeDiff >= 0 && timeDiff <= 30) {
                                 let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
                                 ncrcsTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
+                                totalCapitalNCRCS += parseFloat(row[j+1].replace(/,/g, '') || 0); // Remove commas from the number
+                                totalInterestNCRCS += parseFloat(row[j+2].replace(/,/g, '') || 0); // Remove commas from the number
+                                totalInstallmentNCRCS += parseFloat(row[j+3].replace(/,/g, '') || 0); // Remove commas from the number
                             }
 
                             if (timeDiff >= 0 && timeDiff <= 30) {
                                 let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
                                 upcomingTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
+                                totalCapital += parseFloat(row[j+1].replace(/,/g, '') || 0); // Remove commas from the number
+                                totalInterest += parseFloat(row[j+2].replace(/,/g, '') || 0); // Remove commas from the number
+                                totalInstallment += parseFloat(row[j+3].replace(/,/g, '') || 0); // Remove commas from the number
                             } else if (timeDiff < 0 && timeDiff >= -14) {
                                 expiredTableContent += buildTableRow(row, lenderName, loanDate, j, `Delete in ${14 + Math.ceil(timeDiff)} days`);
+                                totalCapitalExpired += parseFloat(row[j+1].replace(/,/g, '') || 0); // Remove commas from the number
+                                totalInterestExpired += parseFloat(row[j+2].replace(/,/g, '') || 0); // Remove commas from the number
+                                totalInstallmentExpired += parseFloat(row[j+3].replace(/,/g, '') || 0); // Remove commas from the number
                             }
                         }
                     }
@@ -127,6 +172,16 @@
                 document.querySelector("#upcomingLoans tbody").innerHTML = upcomingTableContent || "<tr><td colspan='7'>No upcoming loans.</td></tr>";
                 document.querySelector("#ncrcsLoans tbody").innerHTML = ncrcsTableContent || "<tr><td colspan='7'>No NCRCS loans.</td></tr>";
                 document.querySelector("#expiredLoans tbody").innerHTML = expiredTableContent || "<tr><td colspan='7'>No expired loans.</td></tr>";
+
+                document.getElementById("totalCapital").textContent = totalCapital.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalInterest").textContent = totalInterest.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalInstallment").textContent = totalInstallment.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalCapitalNCRCS").textContent = totalCapitalNCRCS.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalInterestNCRCS").textContent = totalInterestNCRCS.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalInstallmentNCRCS").textContent = totalInstallmentNCRCS.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalCapitalExpired").textContent = totalCapitalExpired.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalInterestExpired").textContent = totalInterestExpired.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalInstallmentExpired").textContent = totalInstallmentExpired.toLocaleString('en-US', { style: 'decimal' });
             })
             .catch(error => {
                 console.error('Error:', error);
