@@ -26,10 +26,10 @@
 <body>
     <h1>Loan Upcoming Due Dates</h1>
     <p>Displays loans that are due within the next 30 days.</p>
-    <label for="loanFilter">Filter Lender:</label>
-    <input type="text" id="loanFilter" onkeyup="filterTable('upcomingLoans', 1)">
+    <label for="upcomingFilter">Filter Lender:</label>
+    <input type="text" id="upcomingFilter" onkeyup="filterTable('upcomingLoans', 1)">
     <button onclick="filterTable('upcomingLoans', 1)">Filter</button>
-    <button onclick="clearFilter('loanFilter', 'upcomingLoans')">Clear</button><br><br>
+    <button onclick="clearFilter('upcomingFilter', 'upcomingLoans')">Clear</button><br><br>
     <table id="upcomingLoans">
         <thead>
             <tr>
@@ -100,46 +100,48 @@
 
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                let upcomingTableContent = '';
-                let expiredTableContent = '';
-                let ncrcsTableContent = '';
 
-                const lenders = loansData[0];
-
-                for (let i = 2; i < loansData.length; i++) {
-                    let row = loansData[i];
-                    let loanDate = new Date(row[0]);
-                    loanDate.setHours(0, 0, 0, 0);
-
-                    for (let j = 1; j < row.length; j += 4) {
-                        let lenderIndex = Math.ceil(j / 4) * 4 - 3;
-                        let lenderName = lenders[lenderIndex];
-
-                        if (row[j] || row[j+1] || row[j+2] || row[j+3]) {
-                            let timeDiff = (loanDate - today) / (1000 * 60 * 60 * 24);
-
-                            if (lenderName.includes("NCRCS") && timeDiff >= 0 && timeDiff <= 30) {
-                                let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
-                                ncrcsTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
-                            }
-
-                            if (timeDiff >= 0 && timeDiff <= 30) {
-                                let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
-                                upcomingTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
-                            } else if (timeDiff < 0 && timeDiff >= -14) {
-                                expiredTableContent += buildTableRow(row, lenderName, loanDate, j, `Delete in ${14 + Math.ceil(timeDiff)} days`);
-                            }
-                        }
-                    }
-                }
-
-                document.querySelector("#upcomingLoans tbody").innerHTML = upcomingTableContent || "<tr><td colspan='7'>No upcoming loans.</td></tr>";
-                document.querySelector("#ncrcsLoans tbody").innerHTML = ncrcsTableContent || "<tr><td colspan='7'>No NCRCS loans.</td></tr>";
-                document.querySelector("#expiredLoans tbody").innerHTML = expiredTableContent || "<tr><td colspan='7'>No expired loans.</td></tr>";
+                createTable('upcomingLoans', loansData, today, 0, 'upcomingFilter');
+                createTable('ncrcsLoans', loansData, today, 1, 'ncrcsFilter');
+                createTable('expiredLoans', loansData, today, -14, 'expiredFilter');
             })
             .catch(error => {
                 console.error('Error:', error);
             });
+
+        function createTable(tableId, data, currentDate, dateDiff, filterInputId) {
+            const table = document.getElementById(tableId);
+            const filterInput = document.getElementById(filterInputId);
+            const lenders = data[0];
+
+            let tableContent = '';
+
+            for (let i = 2; i < data.length; i++) {
+                const row = data[i];
+                const loanDate = new Date(row[0]);
+                loanDate.setHours(0, 0, 0, 0);
+
+                for (let j = 1; j < row.length; j += 4) {
+                    const lenderIndex = Math.ceil(j / 4) * 4 - 3;
+                    const lenderName = lenders[lenderIndex];
+
+                    if (row[j] || row[j + 1] || row[j + 2] || row[j + 3]) {
+                        const timeDiff = (loanDate - currentDate) / (1000 * 60 * 60 * 24);
+
+                        if (timeDiff >= dateDiff && timeDiff <= 30) {
+                            const remarks = loanDate.getTime() === currentDate.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
+                            tableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
+                        }
+                    }
+                }
+            }
+
+            table.querySelector('tbody').innerHTML = tableContent || "<tr><td colspan='7'>No loans found.</td></tr>";
+
+            filterInput.addEventListener('keyup', () => {
+                filterTable(tableId, 1);
+            });
+        }
 
         function buildTableRow(row, lenderName, loanDate, j, remarks) {
             return `
@@ -147,25 +149,24 @@
                     <td>${loanDate.toLocaleDateString()}</td>
                     <td>${lenderName}</td>
                     <td>${row[j] || ''}</td>
-                    <td>${row[j+1] || ''}</td>
-                    <td>${row[j+2] || ''}</td>
-                    <td>${row[j+3] || ''}</td>
+                    <td>${row[j + 1] || ''}</td>
+                    <td>${row[j + 2] || ''}</td>
+                    <td>${row[j + 3] || ''}</td>
                     <td>${remarks}</td>
                 </tr>
             `;
         }
 
         function filterTable(tableId, columnIndex) {
-            const input = document.getElementById(`${tableId.replace('Loans', 'Filter')}`);
-            const filterValue = input.value.toUpperCase();
             const table = document.getElementById(tableId);
+            const filterValue = document.getElementById(tableId.replace('Loans', 'Filter')).value.toUpperCase();
             const rows = table.getElementsByTagName('tr');
 
             for (let i = 0; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName('td');
-                if (cells.length > 0) {
-                    const cellValue = cells[columnIndex].textContent || cells[columnIndex].innerText;
-                    if (cellValue.toUpperCase().indexOf(filterValue) > -1) {
+                const td = rows[i].getElementsByTagName('td')[columnIndex];
+                if (td) {
+                    const txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filterValue) > -1) {
                         rows[i].style.display = '';
                     } else {
                         rows[i].style.display = 'none';
