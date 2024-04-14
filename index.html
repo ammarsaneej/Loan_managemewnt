@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +25,7 @@
     </style>
 </head>
 <body>
-    <h1>Loan Upcoming Due Dates</h1>
+    <h1>TERM LOANS</h1>
     <p>Displays loans that are due within the next 30 days.</p>
     <input type="text" id="upcomingFilter" oninput="filterTable('upcomingLoans', 'upcomingFilter')">
     <table id="upcomingLoans">
@@ -42,7 +43,7 @@
         <tbody></tbody>
         <tfoot>
             <tr>
-                <td colspan="3">Total</td>
+                <td colspan="3">TOTAL</td>
                 <td id="totalCapital" class="finance"></td>
                 <td id="totalInterest" class="finance"></td>
                 <td id="totalInstallment" class="finance"></td>
@@ -51,7 +52,7 @@
         </tfoot>
     </table>
 
-    <h1>NCRCS Loans</h1>
+    <h1>NCRCS Loans (Farmer Loan)</h1>
     <p>Displays NCRCS loans that are due within the next 30 days.</p>
     <input type="text" id="ncrcsFilter" oninput="filterTable('ncrcsLoans', 'ncrcsFilter')">
     <table id="ncrcsLoans">
@@ -69,10 +70,37 @@
         <tbody></tbody>
         <tfoot>
             <tr>
-                <td colspan="3">Total</td>
+                <td colspan="3">TOTAL</td>
                 <td id="totalCapitalNCRCS" class="finance"></td>
                 <td id="totalInterestNCRCS" class="finance"></td>
                 <td id="totalInstallmentNCRCS" class="finance"></td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <h1>LEASE VEHICLES</h1>
+    <p>Displays LEASEs that are due within the next 30 days.</p>
+    <input type="text" id="leaseFilter" oninput="filterTable('leaseLoans', 'leaseFilter')">
+    <table id="leaseLoans">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Lender</th>
+                <th>Reference</th>
+                <th>Capital</th>
+                <th>Interest</th>
+                <th>Installment</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">TOTAL</td>
+                <td id="totalCapitalLease" class="finance"></td>
+                <td id="totalInterestLease" class="finance"></td>
+                <td id="totalInstallmentLease" class="finance"></td>
                 <td></td>
             </tr>
         </tfoot>
@@ -96,7 +124,7 @@
         <tbody></tbody>
         <tfoot>
             <tr>
-                <td colspan="3">Total</td>
+                <td colspan="3">TOTAL</td>
                 <td id="totalCapitalExpired" class="finance"></td>
                 <td id="totalInterestExpired" class="finance"></td>
                 <td id="totalInstallmentExpired" class="finance"></td>
@@ -106,7 +134,7 @@
     </table>
 
     <div id="createdBy">Created by: M I Ammar Saneej</div>
-
+    <div id="createdBy">V5.1 Loan Management App New code version - 5 (LEASE)</div>
     <script>
         const apiKey = 'AIzaSyDdIZz5120-LxJmhLsMHgfvgAil3G7-GI8';
         const spreadsheetId = '1E73ERVtf9KhxbyaiguEkg96aKyc4sCZkFgq0cxmlEUM';
@@ -121,6 +149,7 @@
                 let upcomingTableContent = '';
                 let expiredTableContent = '';
                 let ncrcsTableContent = '';
+                let leaseTableContent = '';
 
                 const lenders = loansData[0];
                 let totalCapital = 0;
@@ -129,6 +158,9 @@
                 let totalCapitalNCRCS = 0;
                 let totalInterestNCRCS = 0;
                 let totalInstallmentNCRCS = 0;
+                let totalCapitalLease = 0;
+                let totalInterestLease = 0;
+                let totalInstallmentLease = 0;
                 let totalCapitalExpired = 0;
                 let totalInterestExpired = 0;
                 let totalInstallmentExpired = 0;
@@ -153,7 +185,15 @@
                                 totalInstallmentNCRCS += parseFloat(row[j+3].replace(/,/g, '') || 0); // Remove commas from the number
                             }
 
-                            if (timeDiff >= 0 && timeDiff <= 30) {
+                            if (lenderName.includes("LEASE") && timeDiff >= 0 && timeDiff <= 30) {
+                                let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
+                                leaseTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
+                                totalCapitalLease += parseFloat(row[j+1].replace(/,/g, '') || 0); // Remove commas from the number
+                                totalInterestLease += parseFloat(row[j+2].replace(/,/g, '') || 0); // Remove commas from the number
+                                totalInstallmentLease += parseFloat(row[j+3].replace(/,/g, '') || 0); // Remove commas from the number
+                            }
+
+                            if (timeDiff >= 0 && timeDiff <= 30 && !lenderName.includes("NCRCS") && !lenderName.includes("LEASE")) {
                                 let remarks = loanDate.getTime() === today.getTime() ? "<span class='due-today'>Due Today</span>" : `Due in ${Math.ceil(timeDiff)} days`;
                                 upcomingTableContent += buildTableRow(row, lenderName, loanDate, j, remarks);
                                 totalCapital += parseFloat(row[j+1].replace(/,/g, '') || 0); // Remove commas from the number
@@ -171,6 +211,7 @@
 
                 document.querySelector("#upcomingLoans tbody").innerHTML = upcomingTableContent || "<tr><td colspan='7'>No upcoming loans.</td></tr>";
                 document.querySelector("#ncrcsLoans tbody").innerHTML = ncrcsTableContent || "<tr><td colspan='7'>No NCRCS loans.</td></tr>";
+                document.querySelector("#leaseLoans tbody").innerHTML = leaseTableContent || "<tr><td colspan='7'>No lease-related loans.</td></tr>";
                 document.querySelector("#expiredLoans tbody").innerHTML = expiredTableContent || "<tr><td colspan='7'>No expired loans.</td></tr>";
 
                 document.getElementById("totalCapital").textContent = totalCapital.toLocaleString('en-US', { style: 'decimal' });
@@ -179,6 +220,9 @@
                 document.getElementById("totalCapitalNCRCS").textContent = totalCapitalNCRCS.toLocaleString('en-US', { style: 'decimal' });
                 document.getElementById("totalInterestNCRCS").textContent = totalInterestNCRCS.toLocaleString('en-US', { style: 'decimal' });
                 document.getElementById("totalInstallmentNCRCS").textContent = totalInstallmentNCRCS.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalCapitalLease").textContent = totalCapitalLease.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalInterestLease").textContent = totalInterestLease.toLocaleString('en-US', { style: 'decimal' });
+                document.getElementById("totalInstallmentLease").textContent = totalInstallmentLease.toLocaleString('en-US', { style: 'decimal' });
                 document.getElementById("totalCapitalExpired").textContent = totalCapitalExpired.toLocaleString('en-US', { style: 'decimal' });
                 document.getElementById("totalInterestExpired").textContent = totalInterestExpired.toLocaleString('en-US', { style: 'decimal' });
                 document.getElementById("totalInstallmentExpired").textContent = totalInstallmentExpired.toLocaleString('en-US', { style: 'decimal' });
